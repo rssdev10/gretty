@@ -8,6 +8,8 @@
  */
 package org.akhikhl.gretty
 
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 import org.akhikhl.gretty.scanner.JDKScannerManager
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
@@ -23,6 +25,7 @@ import org.springframework.boot.devtools.livereload.LiveReloadServer
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 abstract class StartBaseTask extends DefaultTask {
 
   boolean interactive = true
@@ -152,6 +155,7 @@ abstract class StartBaseTask extends DefaultTask {
           getOutputs: { startTask.getOutputs() },
           getProject: { startTask.project },
           getWorkingDir: { project.projectDir },
+          getJvmArgumentProviders: { [] }
       ]) as JacocoHelper
       project.jacoco.applyTo(jacocoHelper)
       jacocoHelper.jacoco.enabled = getDefaultJacocoEnabled()
@@ -207,7 +211,7 @@ abstract class StartBaseTask extends DefaultTask {
             Set<URL> resolvedClassPath = new LinkedHashSet<URL>()
             if(wconfig.projectPath) {
               def proj = self.project.project(wconfig.projectPath)
-              String runtimeConfig = ProjectUtils.isSpringBootApp(proj) ? 'springBoot' : 'runtime'
+              String runtimeConfig = ProjectUtils.isSpringBootApp(proj) ? 'springBoot' : 'runtimeClasspath'
               resolvedClassPath.addAll(ProjectUtils.resolveClassPath(proj, wconfig.beforeClassPath))
               resolvedClassPath.addAll(ProjectUtils.getClassPath(proj, wconfig.inplace, runtimeConfig))
               resolvedClassPath.addAll(ProjectUtils.resolveClassPath(proj, wconfig.classPath))

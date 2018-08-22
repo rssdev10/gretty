@@ -8,6 +8,8 @@
  */
 package org.akhikhl.gretty
 
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 import org.apache.catalina.Host
 import org.apache.catalina.Lifecycle
 import org.apache.catalina.LifecycleEvent
@@ -29,6 +31,7 @@ import org.xml.sax.InputSource
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 class TomcatServerConfigurer {
 
   protected final Logger log
@@ -69,8 +72,8 @@ class TomcatServerConfigurer {
       def services = server.findServices()
       assert services.length == 1
       service = services[0]
-      tomcat.service = service
-      tomcat.engine = service.getContainer()
+      configurer.setService(tomcat, service)
+      configurer.setEngine(tomcat, service)
       connectors = service.findConnectors()
       tomcat.host = service.getContainer().findChildren().find { it instanceof Host }
       tomcat.port = connectors[0].port

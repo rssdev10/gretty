@@ -10,6 +10,8 @@ package org.akhikhl.gretty
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 
 import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorService
@@ -21,6 +23,7 @@ import org.slf4j.LoggerFactory
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 abstract class LauncherBase implements Launcher {
 
   protected static int[] findFreePorts(int count, List<Integer> range = null) {
@@ -248,7 +251,7 @@ abstract class LauncherBase implements Launcher {
           params.jvmArgs = sconfig.jvmArgs
           params.systemProperties = sconfig.systemProperties
           if(!sconfig.secureRandom) {
-            // Speeding up tomcat startup, according to http://wiki.apache.org/tomcat/HowTo/FasterStartUp
+            // Speeding up tomcat startup, according to https://wiki.apache.org/tomcat/HowTo/FasterStartUp
             // ATTENTION: replacing the blocking entropy source (/dev/random) with a non-blocking one
             // actually reduces security because you are getting less-random data.
             params.systemProperty 'java.security.egd', 'file:/dev/./urandom'

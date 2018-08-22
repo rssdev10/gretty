@@ -8,12 +8,15 @@
  */
 package org.akhikhl.gretty
 
+import groovy.transform.CompileStatic
 import groovy.transform.ToString
+import groovy.transform.TypeCheckingMode
 
 /**
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 @ToString
 class ServerConfig {
 
@@ -70,6 +73,7 @@ class ServerConfig {
   String springBootVersion
   String springLoadedVersion
   String springVersion
+  String logbackVersion
   Boolean singleSignOn
   /**
    * Tomcat-specific: Enables JNDI naming which is disabled by default.

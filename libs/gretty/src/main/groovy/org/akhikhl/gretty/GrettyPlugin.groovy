@@ -8,6 +8,8 @@
  */
 package org.akhikhl.gretty
 
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 import org.apache.commons.io.FilenameUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -22,13 +24,14 @@ import java.nio.file.Paths
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 class GrettyPlugin implements Plugin<Project> {
 
   protected static final Logger log = LoggerFactory.getLogger(GrettyPlugin)
 
   private void addConfigurations(Project project) {
     project.configurations {
-      compile {
+      implementation {
         exclude module: 'spring-boot-starter-tomcat'
         exclude module: 'spring-boot-starter-jetty'
       }
@@ -49,7 +52,7 @@ class GrettyPlugin implements Plugin<Project> {
       }
       grettyProductRuntime
       grettyProvidedCompile
-      project.configurations.findByName('compile')?.extendsFrom grettyProvidedCompile
+      project.configurations.findByName('implementation')?.extendsFrom grettyProvidedCompile
     }
 
     ServletContainerConfig.getConfigs().each { configName, config ->
@@ -58,7 +61,7 @@ class GrettyPlugin implements Plugin<Project> {
   }
 
   private void addConfigurationsAfterEvaluate(Project project) {
-    def runtimeConfig = project.configurations.findByName('runtime')
+    def runtimeConfig = project.configurations.findByName('runtimeClasspath')
     project.configurations {
       springBoot {
         if (runtimeConfig)
@@ -81,11 +84,10 @@ class GrettyPlugin implements Plugin<Project> {
     String springBootVersion = project.gretty.springBootVersion ?: (project.hasProperty('springBootVersion') ? project.springBootVersion : Externalized.getString('springBootVersion'))
     String springLoadedVersion = project.gretty.springLoadedVersion ?: (project.hasProperty('springLoadedVersion') ? project.springLoadedVersion : Externalized.getString('springLoadedVersion'))
     String springVersion = project.gretty.springVersion ?: (project.hasProperty('springVersion') ? project.springVersion : Externalized.getString('springVersion'))
-    String slf4jVersion = Externalized.getString('slf4jVersion')
-    String logbackVersion = Externalized.getString('logbackVersion')
+    String logbackVersion = project.gretty.logbackVersion ?: (project.hasProperty('logbackVersion') ? project.logbackVersion :Externalized.getString('logbackVersion'))
 
     project.dependencies {
-      grettyStarter "org.akhikhl.gretty:gretty-starter:$grettyVersion"
+      grettyStarter "org.gretty:gretty-starter:$grettyVersion"
       grettySpringLoaded "org.springframework:springloaded:$springLoadedVersion"
     }
 
@@ -104,7 +106,7 @@ class GrettyPlugin implements Plugin<Project> {
     }
 
     if(project.gretty.springBoot) {
-      String configName = project.configurations.findByName('compile') ? 'compile' : 'springBoot'
+      String configName = project.configurations.findByName('implementation') ? 'implementation' : 'springBoot'
       project.dependencies.add configName, "org.springframework.boot:spring-boot-starter-web:$springBootVersion", {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
       }
@@ -114,19 +116,17 @@ class GrettyPlugin implements Plugin<Project> {
       project.dependencies.add configName, "org.springframework:spring-messaging:$springVersion"
       project.dependencies.add configName, "org.springframework:spring-websocket:$springVersion"
       project.dependencies.add configName, "ch.qos.logback:logback-classic:$logbackVersion"
-      configName = project.configurations.findByName('runtime') ? 'runtime' : 'springBoot'
-      project.dependencies.add configName, "org.akhikhl.gretty:gretty-springboot:$grettyVersion"
+      configName = project.configurations.findByName('runtimeOnly') ? 'runtimeOnly' : 'springBoot'
+      project.dependencies.add configName, "org.gretty:gretty-springboot:$grettyVersion"
     }
 
     for(String overlay in project.gretty.overlays)
       project.dependencies.add 'grettyProvidedCompile', project.project(overlay)
 
-    def runtimeConfig = project.configurations.findByName('runtime')
+    def runtimeConfig = project.configurations.findByName('runtimeClasspath')
     if(runtimeConfig) {
       if(runtimeConfig.allDependencies.find { it.name == 'slf4j-api' } && !runtimeConfig.allDependencies.find { it.name in ['slf4j-nop', 'slf4j-simple', 'slf4j-log4j12', 'slf4j-jdk14', 'logback-classic', 'log4j-slf4j-impl'] }) {
-        project.dependencies {
-          compile "org.slf4j:slf4j-nop:$slf4jVersion"
-        }
+        log.warn("Found slf4j-api dependency but no providers were found.  Did you mean to add slf4j-simple? See https://www.slf4j.org/codes.html#noProviders .")
       }
     }
 
@@ -172,9 +172,9 @@ class GrettyPlugin implements Plugin<Project> {
       mavenLocal()
       jcenter()
       mavenCentral()
-      maven { url 'http://repo.spring.io/release' }
-      maven { url 'http://repo.spring.io/milestone' }
-      maven { url 'http://repo.spring.io/snapshot' }
+      maven { url 'https://repo.spring.io/release' }
+      maven { url 'https://repo.spring.io/milestone' }
+      maven { url 'https://repo.spring.io/snapshot' }
     }
   }
 
@@ -792,6 +792,14 @@ class GrettyPlugin implements Plugin<Project> {
         tomcat8Version = Externalized.getString('tomcat8Version')
       if(!has('tomcat8ServletApiVersion'))
         tomcat8ServletApiVersion = Externalized.getString('tomcat8ServletApiVersion')
+      if(!has('tomcat85Version'))
+        tomcat85Version = Externalized.getString('tomcat85Version')
+      if(!has('tomcat85ServletApiVersion'))
+        tomcat85ServletApiVersion = Externalized.getString('tomcat85ServletApiVersion')
+      if(!has('tomcat9Version'))
+        tomcat9Version = Externalized.getString('tomcat9Version')
+      if(!has('tomcat9ServletApiVersion'))
+        tomcat9ServletApiVersion = Externalized.getString('tomcat9ServletApiVersion')
       if(!has('asmVersion'))
         asmVersion = Externalized.getString('asmVersion')
     }

@@ -8,6 +8,8 @@
  */
 package org.akhikhl.gretty
 
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 import org.eclipse.jetty.plus.webapp.EnvConfiguration
 import org.eclipse.jetty.plus.webapp.PlusConfiguration
 import org.eclipse.jetty.security.HashLoginService
@@ -32,13 +34,10 @@ import org.slf4j.LoggerFactory
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 class JettyConfigurerImpl implements JettyConfigurer {
 
   private static final Logger log = LoggerFactory.getLogger(JettyConfigurerImpl)
-
-  protected static boolean isServletApi(String filePath) {
-    filePath.matches(/^.*servlet-api.*\.jar$/)
-  }
 
   private SSOAuthenticatorFactory ssoAuthenticatorFactory
   private HashSessionManager sharedSessionManager
@@ -201,8 +200,8 @@ class JettyConfigurerImpl implements JettyConfigurer {
   def createWebAppContext(Map serverParams, Map webappParams) {
     List<String> webappClassPath = webappParams.webappClassPath
     JettyWebAppContext context = new JettyWebAppContext()
-    context.setWebInfLib(webappClassPath.findAll { it.endsWith('.jar') && !isServletApi(it) }.collect { new File(it) })
-    context.setExtraClasspath(webappClassPath.collect { it.endsWith('.jar') ? it : (it.endsWith('/') ? it : it + '/') }.findAll { !isServletApi(it) }.join(';'))
+    context.setWebInfLib(webappClassPath.findAll { it.endsWith('.jar') }.collect { new File(it) })
+    context.setExtraClasspath(webappClassPath.collect { it.endsWith('.jar') ? it : (it.endsWith('/') ? it : it + '/') }.join(';'))
     if (webappParams.webXml != null) context.setDescriptor(webappParams.webXml);
     FilteringClassLoader classLoader = new FilteringClassLoader(context)
     classLoader.addServerClass('ch.qos.logback.')

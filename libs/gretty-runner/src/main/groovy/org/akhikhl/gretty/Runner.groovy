@@ -13,11 +13,15 @@ import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.joran.JoranConfigurator
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 import org.slf4j.LoggerFactory
+
 /**
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 final class Runner {
 
   protected final Map params
@@ -28,7 +32,7 @@ final class Runner {
     void onServerStart(Map serverStartInfo) {
       JsonBuilder json = new JsonBuilder()
       json serverStartInfo
-      ServiceProtocol.sendMayFail(params.statusPort, json.toString())
+      ServiceProtocol.sendMayFail((int) params.statusPort, json.toString())
     }
   }
 
@@ -62,7 +66,7 @@ final class Runner {
       logbackConfigText = new File(serverParams.logbackConfigFile).getText('UTF-8')
     }
     else
-      logbackConfigText = this.getClass().getResourceAsStream('/grettyRunnerLogback.groovy').getText('UTF-8')
+      logbackConfigText = Runner.class.getResourceAsStream('/grettyRunnerLogback.groovy').getText('UTF-8')
     Binding binding = new Binding()
     binding.loggingLevel = stringToLoggingLevel(serverParams.loggingLevel)
     binding.consoleLogEnabled = Boolean.valueOf(serverParams.consoleLogEnabled == null ? true : serverParams.consoleLogEnabled)

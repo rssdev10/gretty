@@ -1,6 +1,6 @@
 apply plugin: 'war'
-apply plugin: 'org.akhikhl.gretty'
-apply plugin: 'org.akhikhl.gretty.internal.integrationTests.IntegrationTestPlugin'
+apply plugin: 'org.gretty'
+apply plugin: 'org.gretty.internal.integrationTests.IntegrationTestPlugin'
 
 dependencies {
   compile 'org.webjars:bootstrap:3.2.0'
@@ -11,4 +11,4 @@ dependencies {
 
 // annotations are not supported in jetty7
 
-testAll.dependsOn defineIntegrationTestAllContainers(['jetty8', 'jetty9', 'tomcat7', 'tomcat8'])
+testAll.dependsOn defineIntegrationTestAllContainers(['jetty8', 'jetty9', 'tomcat7', 'tomcat8', 'tomcat85', 'tomcat9'])

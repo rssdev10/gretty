@@ -8,8 +8,12 @@
  */
 package org.akhikhl.gretty
 
-import org.apache.commons.lang.SystemUtils
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
+
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
+import org.gradle.util.VersionNumber
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,11 +21,12 @@ import org.slf4j.LoggerFactory
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 class ServletContainerConfig {
 
   protected static final Logger log = LoggerFactory.getLogger(ServletContainerConfig)
 
-	private static configs = createConfigs()
+  private static configs = createConfigs()
 
   private static void addRedirectFilter(Project project, String runnerConfig) {
     ProjectUtils.withOverlays(project).find { proj ->
@@ -30,7 +35,7 @@ class ServletContainerConfig {
       if(webXmlFile.exists()) {
         def webXml = new XmlSlurper().parse(webXmlFile)
         if(webXml.filter.find { it.'filter-class'.text() == 'org.akhikhl.gretty.RedirectFilter' }) {
-          project.dependencies.add 'runtime', "org.akhikhl.gretty:gretty-filter:${project.ext.grettyVersion}", {
+          project.dependencies.add 'runtimeOnly', "org.gretty:gretty-filter:${project.ext.grettyVersion}", {
             exclude group: 'javax.servlet', module: 'servlet-api'
           }
           alteredDependencies = true
@@ -42,7 +47,7 @@ class ServletContainerConfig {
 
   private static createConfigs() {
     String grettyVersion = Externalized.getString('grettyVersion')
-    def runnerGroup = "org.akhikhl.gretty"
+    def runnerGroup = "org.gretty"
     def configs = [ 'jetty7': [
         servletContainerType: 'jetty',
         servletContainerVersion: { project -> project.ext.jetty7Version },
@@ -167,7 +172,6 @@ class ServletContainerConfig {
             force "org.apache.tomcat.embed:tomcat-embed-core:$tomcat8_version"
             force "org.apache.tomcat.embed:tomcat-embed-el:$tomcat8_version"
             force "org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat8_version"
-            force "org.apache.tomcat.embed:tomcat-embed-logging-log4j:$tomcat8_version"
             force "org.apache.tomcat.embed:tomcat-embed-websocket:$tomcat8_version"
             // this fixes incorrect dependency of tomcat-8.0.9 on ecj-4.4RC4
             if(tomcat8_version == '8.0.9')
@@ -180,9 +184,35 @@ class ServletContainerConfig {
             grettyProvidedCompile "javax.servlet:javax.servlet-api:${project.ext.tomcat8ServletApiVersion}"
           }
         }
-      ]
+      ],
+      'tomcat85': [
+        servletContainerType: 'tomcat',
+        servletContainerVersion: { project -> project.ext.tomcat85Version },
+        servletContainerDescription: { project -> "Tomcat ${project.ext.tomcat85Version}" },
+        servletContainerRunnerConfig: 'grettyRunnerTomcat85',
+        servletContainerRunnerDependencies: { project ->
+          project.dependencies.add servletContainerRunnerConfig, "${runnerGroup}:gretty-runner-tomcat85:$grettyVersion"
+          addRedirectFilter(project, servletContainerRunnerConfig)
+          project.configurations[servletContainerRunnerConfig].resolutionStrategy {
+            force "javax.servlet:javax.servlet-api:${project.ext.tomcat85ServletApiVersion}"
+            def tomcat85_version = project.ext.tomcat85Version
+            force "org.apache.tomcat.embed:tomcat-embed-core:$tomcat85_version"
+            force "org.apache.tomcat.embed:tomcat-embed-el:$tomcat85_version"
+            force "org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat85_version"
+            if (VersionNumber.parse(tomcat85_version) <= VersionNumber.parse('8.5.2'))
+              force "org.apache.tomcat.embed:tomcat-embed-logging-log4j:$tomcat85_version"
+            force "org.apache.tomcat.embed:tomcat-embed-websocket:$tomcat85_version"
+          }
+        },
+        servletApiVersion: { project -> project.ext.tomcat85ServletApiVersion },
+        servletApiDependencies: { project ->
+          project.dependencies {
+            grettyProvidedCompile "javax.servlet:javax.servlet-api:${project.ext.tomcat85ServletApiVersion}"
+          }
+        }
+      ],
     ]
-    if(SystemUtils.isJavaVersionAtLeast(1.8f)) {
+    if (JavaVersion.current().isJava8Compatible()) {
       configs['jetty9.3'] = [
         servletContainerType: 'jetty',
         servletContainerVersion: { project -> project.ext.jetty93Version },
@@ -246,6 +276,30 @@ class ServletContainerConfig {
               grettyProvidedCompile 'javax.websocket:javax.websocket-api:1.0'
             }
           }
+      ]
+      configs['tomcat9'] = [
+        servletContainerType: 'tomcat',
+        servletContainerVersion: { project -> project.ext.tomcat9Version },
+        servletContainerDescription: { project -> "Tomcat ${project.ext.tomcat9Version}" },
+        servletContainerRunnerConfig: 'grettyRunnerTomcat9',
+        servletContainerRunnerDependencies: { project ->
+          project.dependencies.add servletContainerRunnerConfig, "${runnerGroup}:gretty-runner-tomcat9:$grettyVersion"
+          addRedirectFilter(project, servletContainerRunnerConfig)
+          project.configurations[servletContainerRunnerConfig].resolutionStrategy {
+            force "javax.servlet:javax.servlet-api:${project.ext.tomcat9ServletApiVersion}"
+            def tomcat9_version = project.ext.tomcat9Version
+            force "org.apache.tomcat.embed:tomcat-embed-core:$tomcat9_version"
+            force "org.apache.tomcat.embed:tomcat-embed-el:$tomcat9_version"
+            force "org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat9_version"
+            force "org.apache.tomcat.embed:tomcat-embed-websocket:$tomcat9_version"
+          }
+        },
+        servletApiVersion: { project -> project.ext.tomcat9ServletApiVersion },
+        servletApiDependencies: { project ->
+          project.dependencies {
+            grettyProvidedCompile "javax.servlet:javax.servlet-api:${project.ext.tomcat9ServletApiVersion}"
+          }
+        }
       ]
     }
     return configs

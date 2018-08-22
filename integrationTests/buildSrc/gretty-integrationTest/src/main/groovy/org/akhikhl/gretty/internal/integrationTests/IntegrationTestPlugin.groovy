@@ -3,6 +3,7 @@ package org.akhikhl.gretty.internal.integrationTests
 import org.akhikhl.gretty.AppAfterIntegrationTestTask
 import org.akhikhl.gretty.AppBeforeIntegrationTestTask
 import org.akhikhl.gretty.ServletContainerConfig
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.testing.Test
@@ -34,7 +35,7 @@ class IntegrationTestPlugin extends BasePlugin {
       integrationTestCompile "org.gebish:geb-spock:${project.gebVersion}"
       integrationTestCompile "org.seleniumhq.selenium:selenium-support:${project.seleniumVersion}"
       integrationTestCompile "org.seleniumhq.selenium:selenium-firefox-driver:${project.seleniumVersion}"
-      integrationTestCompile "org.akhikhl.gretty:gretty-spock:${project.version}"
+      integrationTestCompile "org.gretty:gretty-spock:${project.version}"
     }
   }
 
@@ -74,6 +75,16 @@ class IntegrationTestPlugin extends BasePlugin {
         // excluding jetty9.3/4 tests because of login bug
         integrationTestContainers = ServletContainerConfig.getConfigNames() - ['jetty9.3', 'jetty9.4']
 
+      if(JavaVersion.current().isJava9Compatible()) {
+        // excluding jetty7 and jetty8 under JDK9, can no longer compile JSPs to default 1.5 target,
+        // see https://github.com/gretty-gradle-plugin/gretty/issues/15
+        integrationTestContainers -= ['jetty7', 'jetty8']
+      }
+
+      if(project.hasProperty('testAllContainers') && project.testAllContainers) {
+        integrationTestContainers.retainAll(Eval.me(project.testAllContainers))
+      }
+
       integrationTestContainers.each { String container ->
 
         project.task('integrationTest_' + container, type: Test) { thisTask ->
@@ -112,7 +123,7 @@ class IntegrationTestPlugin extends BasePlugin {
   protected void configureRootProjectProperties(Project project) {
     super.configureRootProjectProperties(project)
     if(!project.hasProperty('geckoDriverArchiveFileName'))
-      project.ext.geckoDriverArchiveFileName = "geckodriver-v${project.geckoDriverVersion}-macos.tar.gz"
+      project.ext.geckoDriverArchiveFileName = "geckodriver-v${project.geckoDriverVersion}-${project.geckoDriverPlatform}.tar.gz"
     if(!project.hasProperty('geckoDriverDownloadUrl'))
       project.ext.geckoDriverDownloadUrl = "https://github.com/mozilla/geckodriver/releases/download/v${project.geckoDriverVersion}/${project.geckoDriverArchiveFileName}"
   }

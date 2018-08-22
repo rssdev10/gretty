@@ -1,7 +1,12 @@
 build
 .gradle
 .groovy
+.project
+.classpath
 .settings
 .nb-*
 .idea
 *.iml
+*.ipr
+*.iws
+bin/

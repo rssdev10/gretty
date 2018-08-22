@@ -7,7 +7,11 @@
  * See the file "CONTRIBUTORS" for complete list of contributors.
  */
 package org.akhikhl.gretty
+
+import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 import org.apache.catalina.Globals
+import org.apache.catalina.Service
 import org.apache.catalina.core.StandardContext
 import org.apache.catalina.deploy.WebXml
 import org.apache.catalina.startup.ContextConfig
@@ -20,6 +24,7 @@ import org.slf4j.LoggerFactory
  *
  * @author akhikhl
  */
+@CompileStatic(TypeCheckingMode.SKIP)
 class TomcatConfigurerImpl implements TomcatConfigurer {
 
   private static final Logger log = LoggerFactory.getLogger(TomcatConfigurerImpl)
@@ -84,5 +89,15 @@ class TomcatConfigurerImpl implements TomcatConfigurer {
       vdc.webInfJars = webInfLibs
       context.setResources(vdc)
     }
+  }
+
+  @Override
+  void setService(Tomcat tomcat, Service service) {
+    tomcat.service = service
+  }
+
+  @Override
+  void setEngine(Tomcat tomcat, Service service) {
+    tomcat.engine = service.getContainer()
   }
 }

@@ -1,6 +1,6 @@
 apply plugin: 'war'
-apply plugin: 'org.akhikhl.gretty'
-apply plugin: 'org.akhikhl.gretty.internal.integrationTests.IntegrationTestPlugin'
+apply plugin: 'org.gretty'
+apply plugin: 'org.gretty.internal.integrationTests.IntegrationTestPlugin'
 
 gretty {
   servletContainer = 'jetty9'
@@ -8,7 +8,8 @@ gretty {
 
 dependencies {
   compile 'org.webjars:jquery:2.1.1'
+  compile 'org.webjars:sockjs-client:0.3.4-1'
 }
 
 defineIntegrationTest()
-testAll.dependsOn defineIntegrationTestAllContainers(['jetty9', 'tomcat7', 'tomcat8'])
+testAll.dependsOn defineIntegrationTestAllContainers(['jetty9', 'tomcat7', 'tomcat8', 'tomcat85', 'tomcat9'])

@@ -1,8 +1,8 @@
 buildscript {
   project.ext {
-    if(has('privateRepoDir')) {
+    if (has('privateRepoDir')) {
       privateRepoDir = privateRepoDir instanceof File ? privateRepoDir.path : privateRepoDir.toString()
-      if(!new File(privateRepoDir).isAbsolute())
+      if (!new File(privateRepoDir).isAbsolute())
         privateRepoDir = new File(projectDir, privateRepoDir).canonicalPath
     } else
       privateRepoDir = new File(project.projectDir, '../build/privateRepo').canonicalPath
@@ -15,7 +15,7 @@ buildscript {
   ext.parentGradleProps = parentGradleProps.asImmutable()
 
   ext.parentGradleProps.each { key, value ->
-    if(key != 'group' && key != 'version' || key != 'rootProjectName')
+    if (key != 'group' && key != 'version' || key != 'rootProjectName')
       project.ext[key] = value
   }
 
@@ -27,11 +27,16 @@ buildscript {
   }
 
   dependencies {
-    classpath "org.akhikhl.gretty:gretty:${parentGradleProps.version}"
-    classpath "org.akhikhl.gretty.internal.integrationTests:gretty-integrationTest:${parentGradleProps.version}"
+    classpath "org.gretty:gretty:${parentGradleProps.version}"
+    classpath "org.gretty.internal.integrationTests:gretty-integrationTest:${parentGradleProps.version}"
   }
 }
 
 allprojects {
   version = rootProject.ext.parentGradleProps.version
+}
+
+wrapper {
+  gradleVersion = '4.7'
+  distributionType = Wrapper.DistributionType.ALL
 }
